@@ -4,7 +4,7 @@ Self-Driving Car Engineer Nanodegree Program
 [image0]: ./result/lane0_blocked.png
 [image1]: ./result/lane0_toright.png
 [image2]: ./result/lane1_blocked.png
-[image3]: ./result/lane1_toleft.png
+[image3]: ./result/lane1_toLeft.png
 [image4]: ./result/lane1_toright.png
 [image5]: ./result/lane2_blocked.png
 [image6]: ./result/lane2_toleft.png
