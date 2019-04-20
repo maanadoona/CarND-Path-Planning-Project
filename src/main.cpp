@@ -102,32 +102,77 @@ int main() {
               car_s = end_path_s;
           }
 
-          bool too_close = false;
+          bool car_ahead = false;
+          bool car_left = false;
+          bool car_right = false;
 
           for(int i = 0; i < sensor_fusion.size(); i++)
           {
               float d = sensor_fusion[i][6];
-              if(d < (2+4*lane+2) && d > (2+4*lane-2))
-              {
-                  double vx = sensor_fusion[i][3];
-                  double vy = sensor_fusion[i][4];
-                  double check_speed = sqrt(vx*vx + vy*vy);
-                  double check_car_s = sensor_fusion[i][5];
+              int car_lane = -1;
 
-                  check_car_s+=((double)prev_size*.02*check_speed);
-                  if((check_car_s > car_s) && ((check_car_s-car_s) < 30))
-                  {
-                      //ref_vel = 29.5;
-                      too_close = true;
-                      if(lane > 0)
-                      {
-                          lane = 0;
-                      }
-                  }
+              if ( d > 0 && d < 4 ) {
+                car_lane = 0;
+              } else if ( d > 4 && d < 8 ) {
+                car_lane = 1;
+              } else if ( d > 8 && d < 12 ) {
+                car_lane = 2;
               }
+              if (car_lane < 0) {
+                continue;
+              }
+
+              double vx = sensor_fusion[i][3];
+              double vy = sensor_fusion[i][4];
+              double check_speed = sqrt(vx*vx + vy*vy);
+              double check_car_s = sensor_fusion[i][5];
+
+              check_car_s+=((double)prev_size*.02*check_speed);
+
+              if(car_lane == lane)
+              {
+                  car_ahead |= ((check_car_s - car_s) > 0) && ((check_car_s-car_s) < 30);
+              }
+              else if(car_lane - lane == -1)
+              {
+                  car_left |= ((check_car_s - car_s) > -30) && ((check_car_s-car_s) < 30);
+              }
+              else if(car_lane - lane == 1)
+              {
+                  car_right |= ((check_car_s - car_s) > -30) && ((check_car_s-car_s) < 30);
+             }
           }
 
-          if(too_close)
+          switch(lane)
+          {
+          case 0:
+              if(car_ahead && !car_right)
+              {
+                lane++;
+              }
+              break;
+
+          case 1:
+              if(car_ahead && car_left && !car_right)
+              {
+                  lane++;
+              }
+              //else if(car_ahead && !car_left && car_right)
+              else if(car_ahead && !car_left)
+              {
+                  lane--;
+              }
+              break;
+
+          case 2:
+              if(car_ahead && !car_left)
+              {
+                  lane--;
+              }
+              break;
+          }
+
+          if(car_ahead)
           {
               ref_vel -= .224;
           }
@@ -135,6 +180,7 @@ int main() {
           {
               ref_vel += .224;
           }
+
 
           vector<double> ptsx;
           vector<double> ptsy;
